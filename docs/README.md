@@ -1,11 +1,25 @@
-##  Required Files
+## Project Structure
 
-Make sure you have these files in the same directory:
 ```
-project_folder/
-├── index.html                  # Main visualization file
-├── processed_retail_data.csv   # Dataset (3,665 products)
-└── README.md                   # This file
+HW7/
+├── src/                        # Source files
+│   ├── index_separated.html    # Main HTML structure
+│   ├── script.js              # D3.js visualization logic
+│   └── styles.css             # CSS styling
+├── data/                      # Data files
+│   ├── processed_retail_data.csv  # Processed dataset (3,665 products)
+│   ├── Online Retail.xlsx     # Original dataset
+│   └── online+retail.zip      # Dataset archive
+├── docs/                      # Documentation
+│   └── README.md              # This file
+├── material/                  # Course materials
+│   ├── d3.md.pdf             # D3.js requirements
+│   └── interactiveVisualization.pdf  # Assignment requirements
+├── backup/                    # Backup files
+│   ├── index.html            # Original monolithic version
+│   ├── data_processing.py    # Data preprocessing script
+│   └── requirements.txt      # Python dependencies
+└── Summary.docx              # Project summary
 ```
 
 ##  Getting Started
@@ -22,7 +36,7 @@ python3 -m http.server 8000
 ### Step 2: Open the Dashboard
 Open your web browser and navigate to:
 ```
-http://localhost:8000/index.html
+http://localhost:8000/src/index_separated.html
 ```
 
 ## Dashboard Features
