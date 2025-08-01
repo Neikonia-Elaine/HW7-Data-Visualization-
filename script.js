@@ -15,7 +15,7 @@ const height = 800 - margin.top - margin.bottom; // Much taller
 const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Load and process data
-d3.csv("../data/processed_retail_data.csv").then(function(csvData) {
+d3.csv("data/processed_retail_data.csv").then(function(csvData) {
     console.log("Data loaded successfully:", csvData.length, "rows");
     // Process the data
     data = csvData.map(d => ({

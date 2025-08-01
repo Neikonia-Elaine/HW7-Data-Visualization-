@@ -36,7 +36,7 @@ python3 -m http.server 8000
 ### Step 2: Open the Dashboard
 Open your web browser and navigate to:
 ```
-http://localhost:8000/src/index_separated.html
+http://localhost:8000/index.html
 ```
 
 ## Dashboard Features
