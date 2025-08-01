@@ -2,10 +2,9 @@
 
 ```
 HW7/
-├── src/                        # Source files
-│   ├── index_separated.html    # Main HTML structure
-│   ├── script.js              # D3.js visualization logic
-│   └── styles.css             # CSS styling
+├── index.html                 # Main visualization file
+├── script.js                  # D3.js visualization logic
+├── styles.css                 # CSS styling
 ├── data/                      # Data files
 │   ├── processed_retail_data.csv  # Processed dataset (3,665 products)
 │   ├── Online Retail.xlsx     # Original dataset
