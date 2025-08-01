@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Retail Analytics Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Online Retail Analytics Dashboard</h1>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="yAxisSelect">Y-Axis Metric:</label>
+            <select id="yAxisSelect">
+                <option value="totalQty">Total Quantity</option>
+                <option value="totalSales">Total Sales</option>
+                <option value="Recency">Recency (days)</option>
+                <option value="frequency">Frequency</option>
+                <option value="Monetary">Monetary</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="countryFilter">Filter by Country:</label>
+            <select id="countryFilter">
+                <option value="ALL">All Countries</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="densitySlider">Point Density:</label>
+            <input type="range" id="densitySlider" min="1" max="10" value="3" step="1">
+            <span id="densityValue">Every 3rd point</span>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-title" id="chartTitle">Product Analysis: Average Price vs Total Quantity</div>
+        <div id="scatter-plot"></div>
+        <div class="analytical-notes" id="analyticalNotes"></div>
+    </div>
+    
+    <div class="selection-info" id="selectionInfo" style="display: none;">
+        <p>Drag to select points on the scatter plot. Press Esc to clear selection.</p>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
