@@ -44,7 +44,7 @@ Switch between different analytical views:
 - **Monetary**: Total monetary value per product
 
 
-#### 3. Point Density Slider
+#### 2. Point Density Slider
 Control data point density to reduce visual clutter:
 - **Slider range**: 1-10
 - **"All points"**: Shows every data point
