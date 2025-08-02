@@ -3,6 +3,7 @@ let data = [];
 let filteredData = [];
 let currentYAxis = 'totalQty';
 let currentCountryFilter = 'ALL';
+let currentPriceFilter = 'ALL';
 let selectedPoints = [];
 let currentDensity = 3;
 
@@ -18,20 +19,32 @@ const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 d3.csv("data/processed_retail_data.csv").then(function(csvData) {
     console.log("Data loaded successfully:", csvData.length, "rows");
     // Process the data
-    data = csvData.map(d => ({
-        StockCode: d.StockCode,
-        Description: d.Description || 'N/A',
-        avgPrice: +d.avgPrice,
-        totalQty: +d.totalQty,
-        totalSales: +d.totalSales,
-        mainCountry: d.mainCountry,
-        Recency: +d.Recency,
-        frequency: +d.frequency,
-        Monetary: +d.Monetary,
-        firstPurchase: d.firstPurchase,
-        lastPurchase: d.lastPurchase,
-        uniqueCustomers: +d.uniqueCustomers
-    }));
+    data = csvData.map(d => {
+        const price = +d.avgPrice;
+        let priceCategory;
+        if (price <= 2) {
+            priceCategory = 'Low Price (≤$2)';
+        } else if (price <= 10) {
+            priceCategory = 'Mid Price ($2-$10)';
+        } else {
+            priceCategory = 'High Price (>$10)';
+        }
+        
+        return {
+            StockCode: d.StockCode,
+            avgPrice: +d.avgPrice,
+            totalQty: +d.totalQty,
+            totalSales: +d.totalSales,
+            mainCountry: d.mainCountry,
+            Recency: +d.Recency,
+            frequency: +d.frequency,
+            firstPurchase: d.firstPurchase,
+            lastPurchase: d.lastPurchase,
+            uniqueCustomers: +d.uniqueCustomers,
+            priceCategory: priceCategory,
+            Description: d.Description
+        };
+    });
     
     // Populate country filter
     const countries = [...new Set(data.map(d => d.mainCountry))].sort();
@@ -58,6 +71,11 @@ d3.csv("data/processed_retail_data.csv").then(function(csvData) {
         updateVisualization();
     });
     
+    d3.select("#priceFilter").on("change", function() {
+        currentPriceFilter = this.value;
+        updateVisualization();
+    });
+    
     // Density slider control
     d3.select("#densitySlider").on("input", function() {
         currentDensity = +this.value;
@@ -77,9 +95,23 @@ d3.csv("data/processed_retail_data.csv").then(function(csvData) {
 
 function updateVisualization() {
     console.log("updateVisualization called");
+    console.log("Current filters:", {
+        country: currentCountryFilter,
+        price: currentPriceFilter,
+        yAxis: currentYAxis
+    });
+    
     // Filter data by country
     let baseData = currentCountryFilter === 'ALL' ? 
         data : data.filter(d => d.mainCountry === currentCountryFilter);
+    
+    console.log("After country filter:", baseData.length, "records");
+    
+    // Filter data by price category
+    if (currentPriceFilter !== 'ALL') {
+        baseData = baseData.filter(d => d.priceCategory === currentPriceFilter);
+        console.log("After price filter:", baseData.length, "records");
+    }
     
     // Sample data based on density slider
     if (currentDensity === 1) {
@@ -88,7 +120,7 @@ function updateVisualization() {
         filteredData = baseData.filter((d, i) => i % currentDensity === 0);
     }
     
-    console.log("Filtered data length:", filteredData.length);
+    console.log("Final filtered data length:", filteredData.length);
     
     // Clear previous chart
     d3.select("#scatter-plot").selectAll("*").remove();
@@ -146,12 +178,14 @@ function updateVisualization() {
         .ticks(10);
     
     g.append("g")
+        .attr("class", "x-axis")
         .attr("transform", `translate(0,${height})`)
         .call(xAxis)
         .selectAll("text")
         .style("font-size", "12px");
     
     g.append("g")
+        .attr("class", "y-axis")
         .call(yAxis)
         .selectAll("text")
         .style("font-size", "12px");
@@ -168,8 +202,7 @@ function updateVisualization() {
         'totalQty': 'Total Quantity Sold',
         'totalSales': 'Total Sales ($)',
         'Recency': 'Recency - Days Since Last Purchase',
-        'frequency': 'Purchase Frequency',
-        'Monetary': 'Monetary Value ($)'
+        'frequency': 'Purchase Frequency'
     };
     
     g.append("text")
@@ -193,27 +226,30 @@ function updateVisualization() {
     const circleContainer = g.append("g")
         .attr("clip-path", "url(#chart-clip)");
     
+    // Add consistent jitter to data for consistency
+    const dataWithJitter = filteredData.map(d => ({
+        ...d,
+        jitterX: (Math.random() - 0.5) * 6,
+        jitterY: (Math.random() - 0.5) * 6
+    }));
+    
     const circles = circleContainer.selectAll(".dot")
-        .data(filteredData)
+        .data(dataWithJitter)
         .enter().append("circle")
         .attr("class", "dot")
         .attr("cx", d => {
-            // Add small random jitter but keep within bounds
             const baseX = xScale(d.avgPrice);
-            const jitter = (Math.random() - 0.5) * 6;
-            return Math.max(fixedPointSize, Math.min(width - fixedPointSize, baseX + jitter));
+            return Math.max(fixedPointSize, Math.min(width - fixedPointSize, baseX + d.jitterX));
         })
         .attr("cy", d => {
-            // Add small random jitter but keep within bounds
             const baseY = yScale(d[currentYAxis]);
-            const jitter = (Math.random() - 0.5) * 6;
-            return Math.max(fixedPointSize, Math.min(height - fixedPointSize, baseY + jitter));
+            return Math.max(fixedPointSize, Math.min(height - fixedPointSize, baseY + d.jitterY));
         })
         .attr("r", fixedPointSize)
         .style("fill", d => colorScale(d.mainCountry))
-        .style("fill-opacity", 0.4) // Even more transparent
+        .style("fill-opacity", 0.4)
         .style("stroke", "#333")
-        .style("stroke-width", 0.2) // Even thinner stroke
+        .style("stroke-width", 0.2)
         .style("stroke-opacity", 0.6)
         .on("mouseover", function(event, d) {
             showTooltip(event, d);
@@ -289,17 +325,16 @@ function hideTooltip() {
 
 function getCurrentYAxisLabel() {
     const labels = {
-        'totalQty': 'Total Qty',
+        'totalQty': 'Total Quantity',
         'totalSales': 'Total Sales',
         'Recency': 'Recency',
-        'frequency': 'Frequency',
-        'Monetary': 'Monetary'
+        'frequency': 'Frequency'
     };
     return labels[currentYAxis];
 }
 
 function formatValue(value) {
-    if (currentYAxis === 'totalSales' || currentYAxis === 'Monetary') {
+    if (currentYAxis === 'totalSales') {
         return `$${value.toFixed(2)}`;
     }
     return value.toString();
@@ -339,13 +374,6 @@ function updateAnalyticalNotes() {
             <p><strong>High frequency & low price:</strong> Replenishment staples, ideal for subscription models</p>
             <p><strong>High frequency & high price:</strong> Customers rely on pricey essentials, enhance VIP perks</p>
             <p><strong>Low frequency:</strong> Occasional purchases, target with seasonal or event-based promotions</p>
-        `;
-    } else if (currentYAxis === 'Monetary') {
-        content = `
-            <h4>Price-Monetary Analysis</h4>
-            <p><strong>Low price, high revenue:</strong> Mass market winners, focus on volume and efficiency</p>
-            <p><strong>High price, high revenue:</strong> Luxury cash cows, require careful inventory and experience management</p>
-            <p><strong>High price, low revenue:</strong> One-off splurges, consider bundling or targeted marketing</p>
         `;
     } else if (currentYAxis === 'totalQty') {
         content = `
