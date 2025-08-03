@@ -8,7 +8,7 @@ from scipy import stats
 def load_and_explore_data():
     """Load the Online Retail dataset and explore its structure"""
     print("Loading Online Retail dataset...")
-    df = pd.read_excel('Online Retail.xlsx')
+    df = pd.read_excel('Online_Retail.xlsx')
     
     print(f"Dataset shape: {df.shape}")
     print(f"\nColumns: {df.columns.tolist()}")
