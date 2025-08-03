@@ -104,3 +104,58 @@ select {
     margin: 0 0 10px 0;
     color: #28a745;
 }
+
+.barchart-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    padding: 28px 20px 20px 20px;
+    margin-bottom: 36px;
+    width: 100%;
+    max-width: 1580px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow-x: auto;
+}
+
+/* .barchart-panel { flex: 1; min-width: 1800px; } */
+#bar-chart {
+    margin-bottom: 18px;
+    min-height: 400px;
+}
+.advice-tag {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 13px;
+    color: #fff;
+    margin-right: 6px;
+}
+.advice-Push { background: #28a745; }
+.advice-Clear { background: #dc3545; }
+.advice-Regular { background: #6c757d; }
+
+.trend-panel, .pareto-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 32px;
+    max-width: 1580px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 24px 20px 18px 24px;
+    overflow-x: auto;
+}
+
+#trend-chart, #pareto-chart {
+    min-height: 350px;
+    max-width: 1520px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pareto-legend {
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}

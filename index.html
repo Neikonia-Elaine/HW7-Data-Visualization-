@@ -45,15 +45,54 @@
         </div>
     </div>
     
-    <div class="chart-container">
-        <div class="chart-title" id="chartTitle">Product Analysis: Average Price vs Total Quantity</div>
-        <div id="scatter-plot"></div>
-        <div class="analytical-notes" id="analyticalNotes"></div>
+    <div class="chart-panel">
+        <div class="chart-container">
+            <div class="chart-title" id="chartTitle">Product Analysis: Average Price vs Total Quantity</div>
+            <div id="scatter-plot"></div>
+            <div class="analytical-notes" id="analyticalNotes"></div>
+        </div>
+        <div class="selection-info" id="selectionInfo" style="display: none;">
+            <p>Drag to select points on the scatter plot. Press Esc to clear selection.</p>
+        </div>
     </div>
-    
-    <div class="selection-info" id="selectionInfo" style="display: none;">
-        <p>Drag to select points on the scatter plot. Press Esc to clear selection.</p>
+
+    <div class="chart-container barchart-panel">
+        <div class="chart-title" id="barchartTitle">Predicted Top Products (Next Month)</div>
+        <div class="chart-subtitle" style="margin-bottom:12px;color:#666;font-size:15px;line-height:1.5;">
+            <b>Prediction Model:</b> Random Forest Regressor<br>
+            <b>Features used:</b> Product ID, Country, Average Unit Price, and 3-month rolling average quantity.<br>
+            Not quiet specific due to the data, just a try, could do better with more learning
+        </div>
+        <div id="bar-chart"></div>
+        <div class="advice-table" id="adviceTable"></div>
     </div>
+
+    <div class="chart-container trend-panel">
+        <div class="chart-title">Monthly Product Sales Trend</div>
+        <div class="chart-subtitle" style="margin-bottom:14px;color:#666;font-size:15px;">
+            Visualizes the sales quantity of a product for each month, revealing seasonal trends.<br>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:12px;gap:10px;">
+            <label for="skuSelect" style="font-weight:bold;">Select Product:</label>
+            <select id="skuSelect" style="min-width:340px;padding:7px 9px;font-size:15px;border-radius:4px;"></select>
+            <button id="showAllBtn" style="background:#e1eafc;color:#144fa0;font-weight:bold;padding:7px 12px;border-radius:5px;border:1px solid #b4c8f7;cursor:pointer;">Show All (Stacked)</button>
+        </div>
+        <div id="trend-chart"></div>
+    </div>
+    <!-- <div class="chart-container pareto-panel">
+        <div class="chart-title">SKU Pareto (Long-tail) Distribution</div>
+        <div class="chart-subtitle" style="margin-bottom:14px;color:#666;font-size:15px;">
+            Visualizes SKU total sales with cumulative % line. Bars are sorted by total quantity.<br>
+            Data Source: <b>sku_pareto.csv</b>
+        </div>
+        <div id="pareto-chart"></div>
+        <div class="pareto-legend" style="margin-top:14px;">
+            <span style="color:#1f77b4;font-weight:bold;">Bar</span>: Quantity Sold &nbsp; | &nbsp;
+            <span style="color:#ff7f0e;font-weight:bold;">Line</span>: Cumulative %
+        </div>
+    </div> -->
+
+
     
     <div class="tooltip" id="tooltip"></div>
 

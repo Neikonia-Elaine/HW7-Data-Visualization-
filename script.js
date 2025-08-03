@@ -93,6 +93,11 @@ d3.csv("data/processed_retail_data.csv").then(function(csvData) {
     });
 });
 
+d3.csv("data/predicted_top_products.csv").then(function(barData) {
+    renderBarChart(barData);
+});
+
+
 function updateVisualization() {
     console.log("updateVisualization called");
     console.log("Current filters:", {
@@ -391,6 +396,268 @@ function updateAnalyticalNotes() {
     
     notes.html(content);
 }
+
+function renderBarChart(data) {
+    const margin = { top: 30, right: 40, bottom: 20, left: 12 };
+    const barHeight = 38;
+    const labelWidth = 270;
+    const numBars = data.length;
+    const chartWidth = 420;
+    const svgWidth = labelWidth + chartWidth + margin.left + margin.right;
+    const svgHeight = numBars * barHeight + margin.top + margin.bottom;
+
+    d3.select("#bar-chart").selectAll("*").remove();
+
+    const svg = d3.select("#bar-chart")
+        .append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .style("display", "block")
+        .style("margin", "0 auto");
+
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(data, d => +d.predictedQty) * 1.1])
+        .range([0, chartWidth]);
+
+    svg.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", labelWidth)
+        .attr("y", (d, i) => i * barHeight + margin.top)
+        .attr("width", d => x(+d.predictedQty))
+        .attr("height", barHeight * 0.62)
+        .attr("fill", "#0074D9")
+        .attr("rx", 7);
+
+    svg.selectAll("text.label")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", margin.left + 2)
+        .attr("y", (d, i) => i * barHeight + margin.top + barHeight * 0.46)
+        .text(d => d.Description.length > 23 ? d.Description.slice(0, 23) + "…" : d.Description)
+        .style("font-size", "15px")
+        .style("fill", "#222")
+        .attr("text-anchor", "start");
+
+    svg.selectAll("text.value")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "value")
+        .attr("x", d => labelWidth + x(+d.predictedQty) + 8)
+        .attr("y", (d, i) => i * barHeight + margin.top + barHeight * 0.46)
+        .attr("font-size", "15px")
+        .attr("fill", "#0074D9")
+        .attr("text-anchor", "start")
+        .text(d => Math.round(d.predictedQty));
+
+    svg.selectAll("rect")
+        .on("mousemove", function(event, d) {
+            d3.select("#tooltip")
+                .style("opacity", 1)
+                .html(
+                    `<b>${d.Description}</b><br/>
+                    StockCode: ${d.StockCode}<br/>
+                    Predicted Sales: <b>${Math.round(d.predictedQty)}</b><br/>
+                    Recency: ${d.recency} days<br/>
+                    Frequency: ${d.freq}`
+                )
+                .style("left", (event.pageX + 18) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseleave", function() {
+            d3.select("#tooltip").style("opacity", 0);
+        });
+
+    let adviceExplanations = {
+        Push: "Strongly recommend focusing and promoting this product.",
+        Clear: "Inventory is aging or sales are stale. Recommend clearance.",
+        Regular: "No special attention needed, maintain regular operations."
+    };
+
+    let tableHtml = `
+        <table style="width:98%;margin:12px auto 0;font-size:14px;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f2f2f2;">
+                    <th style="text-align:left;padding:5px;">StockCode</th>
+                    <th style="text-align:left;padding:5px;">Product</th>
+                    <th style="text-align:right;padding:5px;">Predicted Sales</th>
+                    <th style="text-align:left;padding:5px;">Advice</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    data.forEach(d => {
+        const adviceStr = {Push: "Push Bestseller", Clear: "Clear Inventory", Regular: "Regular Attention"}[d.advice] || d.advice;
+        tableHtml += `
+            <tr>
+                <td style="padding:5px;">${d.StockCode}</td>
+                <td style="padding:5px;">${d.Description.length > 20 ? d.Description.slice(0, 20) + "…" : d.Description}</td>
+                <td style="text-align:right;padding:5px;">${Math.round(d.predictedQty)}</td>
+                <td style="padding:5px;">
+                    <span class="advice-tag advice-${d.advice}" data-type="${d.advice}">
+                        ${adviceStr}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+    tableHtml += "</tbody></table>";
+
+    d3.select("#adviceTable").html(tableHtml);
+
+    d3.selectAll(".advice-tag")
+        .on("mousemove", function(event) {
+            const adviceType = this.getAttribute('data-type');
+            d3.select("#tooltip")
+                .style("opacity", 1)
+                .html(
+                    `<strong>${
+                        {Push: "Push Bestseller", Clear: "Clear Inventory", Regular: "Regular Attention"}[adviceType]
+                    }</strong><br>${adviceExplanations[adviceType]}`
+                )
+                .style("left", (event.pageX + 20) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseleave", function() {
+            d3.select("#tooltip").style("opacity", 0);
+        });
+}
+
+d3.csv("data/monthly_trend.csv").then(function(trendData) {
+    trendData.forEach(d => {
+        d.Quantity = +d.Quantity;
+        d.TotalPrice = +d.TotalPrice;
+        d.InvoiceMonth = d3.timeParse("%Y-%m-%d")(d.InvoiceMonth);
+    });
+    let skuList = Array.from(new Set(trendData.map(d => d.StockCode + " - " + d.Description)));
+    skuList.sort();
+    const skuSelect = d3.select("#skuSelect");
+    skuList.forEach(sku => {
+        skuSelect.append("option").attr("value", sku).text(sku);
+    });
+
+    let currentSku = skuList[0];
+    renderTrendChart(trendData, currentSku, false);
+
+    skuSelect.on("change", function() {
+        currentSku = this.value;
+        renderTrendChart(trendData, currentSku, false);
+    });
+
+    d3.select("#showAllBtn").on("click", function() {
+        renderTrendChart(trendData, null, true);
+    });
+});
+
+function renderTrendChart(data, selectedSku, showAll) {
+    d3.select("#trend-chart").selectAll("*").remove();
+    const width = 500, height = 290, margin = {top: 40, right: 40, bottom: 55, left: 55};
+
+    let svg = d3.select("#trend-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+
+    let chart = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    let months = Array.from(new Set(data.map(d => +d.InvoiceMonth))).sort((a,b)=>a-b)
+        .map(ts => new Date(ts));
+
+    let x = d3.scaleBand().domain(months).range([0, width]).padding(0.1);
+    let y = d3.scaleLinear();
+
+    if (showAll) {
+        let skuNames = Array.from(new Set(data.map(d => d.Description)));
+        let stacked = d3.stack()
+            .keys(skuNames)
+            .value((months, name) => {
+                let found = months.values.find(d=>d.Description === name);
+                return found ? found.Quantity : 0;
+            })(months.map(month => ({
+                key: month,
+                values: data.filter(d => d.InvoiceMonth.getTime() === month.getTime())
+            })));
+        let yMax = d3.max(stacked[stacked.length-1], d=>d[1]);
+        y.domain([0, yMax]).range([height, 0]);
+
+        let color = d3.scaleOrdinal(d3.schemeCategory10);
+        chart.selectAll("g.stackedbar")
+            .data(stacked)
+            .enter().append("g")
+            .attr("fill", d=>color(d.key))
+            .selectAll("rect")
+            .data(d=>d)
+            .enter().append("rect")
+            .attr("x", (d,i)=>x(months[i]))
+            .attr("y", d=>y(d[1]))
+            .attr("height", d=>y(d[0])-y(d[1]))
+            .attr("width", x.bandwidth());
+        // Legend
+        chart.selectAll(".legend")
+            .data(color.domain())
+            .enter().append("rect")
+            .attr("x", width-18)
+            .attr("y", (d,i)=>i*18)
+            .attr("width",14).attr("height",14)
+            .attr("fill", d=>color(d));
+        chart.selectAll(".legendlabel")
+            .data(color.domain())
+            .enter().append("text")
+            .attr("x", width)
+            .attr("y", (d,i)=>i*18+11)
+            .text(d=>d)
+            .attr("font-size", "11px");
+    } else {
+        let dSku = data.filter(d=> (d.StockCode + " - " + d.Description) === selectedSku);
+        y.domain([0, d3.max(dSku, d=>d.Quantity)*1.12]).range([height, 0]);
+        chart.append("path")
+            .datum(dSku)
+            .attr("fill", "none")
+            .attr("stroke", "#0074D9")
+            .attr("stroke-width", 3)
+            .attr("d", d3.line()
+                .x(d=>x(d.InvoiceMonth)+x.bandwidth()/2)
+                .y(d=>y(d.Quantity))
+            );
+        chart.selectAll(".dot")
+            .data(dSku)
+            .enter().append("circle")
+            .attr("cx", d=>x(d.InvoiceMonth)+x.bandwidth()/2)
+            .attr("cy", d=>y(d.Quantity))
+            .attr("r", 5)
+            .attr("fill", "#0074D9");
+    }
+
+    let xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m"));
+    chart.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(xAxis)
+        .selectAll("text").attr("transform","rotate(30)").style("text-anchor","start");
+    chart.append("g").call(d3.axisLeft(y));
+
+    svg.append("text")
+        .attr("class","axis-label")
+        .attr("x", margin.left + width/2)
+        .attr("y", margin.top+height+44)
+        .attr("text-anchor", "middle")
+        .text("Month");
+
+    svg.append("text")
+        .attr("class","axis-label")
+        .attr("x", -height/2-margin.top)
+        .attr("y", 19)
+        .attr("text-anchor","middle")
+        .attr("transform","rotate(-90)")
+        .text("Quantity Sold");
+}
+
+
+
+
 
 // Initialize analytical notes
 updateAnalyticalNotes();
